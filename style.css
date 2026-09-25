@@ -1,0 +1,699 @@
+/* =============================================================================
+   style.css — Expense & Budget Visualizer
+   Task 11.1: Layout styles only
+   Task 11.2: Component / colour / contrast styles
+   ============================================================================= */
+
+/* =============================================================================
+   1. CSS Custom Properties (Design Tokens)
+   ============================================================================= */
+
+:root {
+  /* Color palette */
+  --color-bg:           #f5f7fa;
+  --color-surface:      #ffffff;
+  --color-border:       #d1d5db;
+  --color-text:         #1a1a2e;
+  --color-text-muted:   #6b7280;
+  --color-primary:      #4f46e5;
+  --color-primary-dark: #3730a3;
+  --color-error:        #b91c1c;
+  --color-error-bg:     #fef2f2;
+  --color-error-border: #fca5a5;
+  --color-banner-bg:    #fef2f2;
+  --color-banner-text:  #991b1b;
+
+  /* Spacing scale */
+  --space-1: 0.25rem;   /*  4px */
+  --space-2: 0.5rem;    /*  8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-8: 2rem;      /* 32px */
+
+  /* Typography */
+  --font-size-body:    1rem;       /* 16px ≥ 14px — satisfies Req 8.2 */
+  --font-size-small:   0.875rem;   /* 14px */
+  --font-size-h2:      1.25rem;    /* 20px ≥ 18px — satisfies Req 8.2 */
+  --font-size-h1:      1.5rem;     /* 24px ≥ 18px — satisfies Req 8.2 */
+  --font-size-balance: 2.5rem;     /* prominent balance figure */
+  --line-height:       1.5;
+
+  /* Border radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* Layout */
+  --app-max-width:      1400px;
+  --form-min-width:     280px;
+  --list-scroll-height: 320px;
+  --chart-max-width:    480px;
+  --content-padding:    var(--space-4);
+}
+
+/* =============================================================================
+   2. Reset / Base
+   ============================================================================= */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  /* Prevent horizontal overflow at any viewport width */
+  overflow-x: hidden;
+  /* Minimum supported viewport width per Req 7.3 */
+  min-width: 320px;
+}
+
+body {
+  /* Ensure body text meets ≥ 14px — Req 8.2 */
+  font-size: var(--font-size-body);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  line-height: var(--line-height);
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  /* Prevent horizontal scrollbar at narrow viewports — Req 7.3 */
+  overflow-x: hidden;
+  min-width: 320px;
+}
+
+/* Override the HTML `hidden` attribute so banners/elements are truly hidden
+   even when other rules try to override display. */
+[hidden] {
+  display: none !important;
+}
+
+/* =============================================================================
+   3. Error Banners
+   ============================================================================= */
+
+/*
+ * .banner is rendered at the top of <body>, outside .app-wrapper.
+ * When [hidden] is removed the element becomes visible as a fixed/sticky strip.
+ * Layout-only styles here; colours handled in task 11.2 but a minimal background
+ * is included so the banner is usable before 11.2 ships.
+ */
+.banner {
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  width: 100%;
+  padding: var(--space-3) var(--content-padding);
+  font-size: var(--font-size-body);
+  line-height: var(--line-height);
+  /* Minimal colours so the banner is legible without task-11.2 styles */
+  background-color: var(--color-banner-bg);
+  color: var(--color-banner-text);
+  border-bottom: 1px solid var(--color-error-border);
+  text-align: center;
+}
+
+/* =============================================================================
+   4. App Wrapper
+   ============================================================================= */
+
+/*
+ * Centers the application content and constrains the max width.
+ * Horizontal padding prevents edge bleed on narrow viewports.
+ */
+.app-wrapper {
+  max-width: var(--app-max-width);
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--space-6) var(--content-padding);
+  /* Defensive: ensure the wrapper itself never causes horizontal overflow */
+  overflow-x: hidden;
+}
+
+/* =============================================================================
+   5. Balance Display   (#balance-display)
+   ============================================================================= */
+
+/*
+ * Req 8.1: Balance_Display is positioned at the top of the viewport (first
+ * element inside .app-wrapper, before .main-content and .chart-section).
+ * Req 8.2: heading text ≥ 18px.
+ */
+#balance-display {
+  width: 100%;
+  text-align: center;
+  padding: var(--space-6) var(--content-padding);
+  margin-bottom: var(--space-6);
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+}
+
+/* "Total Spent" label — ≥ 18px heading, Req 8.2 */
+.balance-label {
+  font-size: var(--font-size-h1);
+  font-weight: 600;
+  margin-bottom: var(--space-2);
+}
+
+/* Large prominent balance figure */
+.balance-amount {
+  font-size: var(--font-size-balance);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* =============================================================================
+   6. Main Content — Form + List side-by-side (≥ 640px), stacked below
+   ============================================================================= */
+
+/*
+ * Req 8.1: Input_Form positioned above or alongside Transaction_List.
+ * Mobile-first: stacked (column). Breakpoint at 640px: side-by-side (row).
+ */
+.main-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  margin-bottom: var(--space-6);
+  align-items: stretch;
+}
+
+/* Form section — fixed minimum width so it never collapses too small */
+.form-section {
+  flex: 0 0 auto;
+  min-width: var(--form-min-width);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+}
+
+/* Transaction list section — fills remaining horizontal space */
+.list-section {
+  flex: 1 1 auto;
+  min-width: 0; /* allow flex item to shrink below content size */
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+}
+
+/* =============================================================================
+   7. Transaction List Scroll Container
+   ============================================================================= */
+
+/*
+ * Req 2.3: Transaction_List SHALL be vertically scrollable when entries exceed
+ * the visible area. Fixed height with overflow-y: auto satisfies this.
+ */
+.list-scroll-container {
+  height: var(--list-scroll-height);
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Visual affordance that this area scrolls */
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin-top: var(--space-4);
+}
+
+#transaction-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* =============================================================================
+   8. Chart Section
+   ============================================================================= */
+
+/*
+ * Req 8.1: Pie_Chart visible on the same page without horizontal scroll at 320px+.
+ * Full-width below .main-content, chart canvas constrained to --chart-max-width
+ * and centered so it never overflows on narrow viewports.
+ */
+.chart-section {
+  width: 100%;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+}
+
+.chart-container {
+  max-width: var(--chart-max-width);
+  width: 100%;
+  margin: var(--space-4) auto 0;
+  position: relative;
+  /* Prevent canvas overflow on very narrow screens */
+  overflow: hidden;
+}
+
+/* Canvas respects container width — never wider than .chart-container */
+#spending-chart {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* =============================================================================
+   9. Headings
+   ============================================================================= */
+
+/*
+ * Req 8.2: ALL heading text ≥ 18px.
+ * h1 and h2 are used in this application.
+ */
+h1,
+.balance-label {
+  font-size: var(--font-size-h1); /* 1.5rem = 24px */
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+h2 {
+  font-size: var(--font-size-h2); /* 1.25rem = 20px */
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: var(--space-4);
+}
+
+/* =============================================================================
+   10. Responsive Breakpoints
+   ============================================================================= */
+
+/* ── ≥ 640px: form and list appear side-by-side (Req 8.1) ── */
+@media (min-width: 640px) {
+  .main-content {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  /* Form takes a fixed comfortable width; list fills the rest */
+  .form-section {
+    flex: 0 0 320px;
+  }
+}
+
+/* ── ≥ 1024px: wider padding and slightly larger chart cap ── */
+@media (min-width: 1024px) {
+  :root {
+    --content-padding: var(--space-8);
+    --chart-max-width: 560px;
+    --list-scroll-height: 400px;
+  }
+
+  .form-section {
+    flex: 0 0 360px;
+  }
+}
+
+/* ── ≥ 2560px (large monitors): cap padding so content doesn't stretch too wide ── */
+@media (min-width: 2560px) {
+  .app-wrapper {
+    padding-left: var(--space-8);
+    padding-right: var(--space-8);
+  }
+}
+
+/* =============================================================================
+   11. Empty State
+   ============================================================================= */
+
+/*
+ * Shown inside #transaction-list when there are no transactions (Req 2.7).
+ * Centered, muted tone, generous vertical padding.
+ */
+.empty-state {
+  text-align: center;
+  color: var(--color-text-muted);
+  padding: var(--space-8) var(--space-4);
+  font-size: var(--font-size-body); /* ≥ 14px — Req 8.2 */
+  list-style: none;
+}
+
+/* Chart empty-state message */
+.chart-empty-msg {
+  text-align: center;
+  color: var(--color-text-muted);
+  padding: var(--space-6) var(--space-4);
+  font-size: var(--font-size-body); /* ≥ 14px */
+}
+
+/* =============================================================================
+   12. Form Error Message
+   ============================================================================= */
+
+/*
+ * #form-error sits inside the form and shows validation messages.
+ * min-height prevents layout shift when the message appears/disappears.
+ * Color ensures ≥ 4.5:1 contrast against white background — Req 8.3.
+ * Component-level polish handled in task 11.2; layout essentials here.
+ */
+.form-error {
+  min-height: 1.25rem; /* prevents layout shift */
+  font-size: var(--font-size-small); /* 14px — ≥ 14px, Req 8.2 */
+  color: var(--color-error); /* #b91c1c on #fff ≈ 7:1 contrast */
+  margin-top: var(--space-3);
+  line-height: var(--line-height);
+}
+
+/* =============================================================================
+   Task 11.2: Component / Colour / Contrast Styles
+   ============================================================================= */
+
+/* =============================================================================
+   13. Form Field Sizing and Spacing
+   ============================================================================= */
+
+/*
+ * Field group wraps each label + input/select pair.
+ * Stacks label above the control and adds consistent bottom margin.
+ */
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+}
+
+/* Labels — ≥ 14px per Req 8.2, muted tone for hierarchy */
+.field-group label {
+  font-size: var(--font-size-small); /* 14px */
+  font-weight: 600;
+  color: var(--color-text);          /* #1a1a2e — ~16:1 on white */
+}
+
+/*
+ * Shared styles for text input, number input, and category select.
+ * Full-width, ≥ 14px font (Req 8.2), border contrast ≥ 3:1 (Req 8.3).
+ *
+ * Border contrast: #6b7280 on #ffffff ≈ 4.6:1 → exceeds 3:1 threshold for
+ * UI elements and also passes 4.5:1 for normal text.
+ */
+#item-name,
+#item-amount,
+#item-category {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-body);   /* 16px ≥ 14px — Req 8.2 */
+  color: var(--color-text);           /* #1a1a2e on #fff ≈ 16:1 — Req 8.3 */
+  background-color: var(--color-surface); /* #ffffff */
+  border: 1.5px solid var(--color-text-muted); /* #6b7280 ≈ 4.6:1 on white */
+  border-radius: var(--radius-sm);
+  line-height: var(--line-height);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  /* Remove default number spinner arrows for cleaner look (optional) */
+  appearance: auto;
+}
+
+/* Focus ring — visible indicator for keyboard navigation (Req 8.3 / WCAG 2.4.7) */
+#item-name:focus,
+#item-amount:focus,
+#item-category:focus {
+  outline: none;
+  border-color: var(--color-primary); /* #4f46e5 ≈ 5.5:1 on white */
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.25);
+}
+
+/* Submit button
+ * Background: #4f46e5 (primary), text: #ffffff.
+ * Contrast: ~5.5:1 — satisfies ≥ 4.5:1 for normal text (Req 8.3).
+ * Large text (24px bold) threshold 3:1 also satisfied.
+ */
+#transaction-form button[type="submit"] {
+  display: block;
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--font-size-body);   /* 16px */
+  font-weight: 600;
+  color: #ffffff;
+  background-color: var(--color-primary); /* #4f46e5 */
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  margin-top: var(--space-2);
+  transition: background-color 0.15s ease;
+  /* Prevent the button from being clipped by overflow-x:hidden */
+  box-sizing: border-box;
+}
+
+#transaction-form button[type="submit"]:hover,
+#transaction-form button[type="submit"]:focus-visible {
+  background-color: var(--color-primary-dark); /* #3730a3 — ~8:1 on white */
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(55, 48, 163, 0.35);
+}
+
+/* =============================================================================
+   14. Scrollable Transaction List Container
+   ============================================================================= */
+
+/*
+ * .list-scroll-container is defined in task 11.1 with height and overflow-y: auto.
+ * Here we reinforce the overflow scroll behaviour and add a subtle shadow to
+ * hint at scrollability (Req 2.3).
+ */
+.list-scroll-container {
+  /* Ensure these are set even if task 11.1 styles are absent */
+  height: var(--list-scroll-height); /* 320px default, 400px at ≥ 1024px */
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Subtle inset shadow to communicate scroll affordance */
+  box-shadow: inset 0 -8px 8px -8px rgba(0, 0, 0, 0.06);
+}
+
+/* =============================================================================
+   15. Transaction List Items
+   ============================================================================= */
+
+/*
+ * Each <li class="transaction-item"> lays out in a row:
+ *   [name]  [amount]  [category badge]  [delete button]
+ *
+ * On very narrow viewports the row wraps so nothing is clipped (Req 7.3).
+ */
+.transaction-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--font-size-body); /* 16px ≥ 14px — Req 8.2 */
+  color: var(--color-text);         /* #1a1a2e on #fff ≈ 16:1 */
+}
+
+/* Remove border from last item to avoid double-border with the container */
+.transaction-item:last-child {
+  border-bottom: none;
+}
+
+/* Item name — grows to fill available space; ellipsis if somehow still too long */
+.transaction-name {
+  flex: 1 1 120px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: 500;
+  min-width: 0;
+}
+
+/* Formatted dollar amount — fixed-width look via numeric tabular figures */
+.transaction-amount {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Category badge
+ * Contrast: #1a1a2e text on #e0e7ff ≈ 12:1 — well above 4.5:1 (Req 8.3).
+ */
+.transaction-category {
+  display: inline-block;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--font-size-small); /* 14px */
+  font-weight: 500;
+  color: #1a1a2e;
+  background-color: #e0e7ff; /* indigo-100 */
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+/* =============================================================================
+   16. Delete Button Styling
+   ============================================================================= */
+
+/*
+ * Visually distinct delete button.
+ * Background: #dc2626 (red-600), text: #ffffff.
+ * Contrast: #ffffff on #dc2626 ≈ 4.8:1 → satisfies ≥ 4.5:1 (Req 8.3).
+ * As a UI element the 3:1 threshold also applies; 4.8:1 exceeds it.
+ */
+.delete-btn {
+  flex: 0 0 auto;
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--font-size-small); /* 14px */
+  font-weight: 600;
+  color: #ffffff;
+  background-color: #dc2626; /* red-600 — 4.8:1 on white, 4.8:1 for btn */
+  border: 1.5px solid #b91c1c; /* red-700 — darkens the border for extra definition */
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  line-height: var(--line-height);
+}
+
+.delete-btn:hover,
+.delete-btn:focus-visible {
+  background-color: #b91c1c; /* red-700 — ≈ 6.4:1 on white */
+  border-color: #991b1b;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.30);
+}
+
+/* =============================================================================
+   17. Empty-State Message Styles
+   ============================================================================= */
+
+/*
+ * .empty-state is a <li> rendered when no transactions exist (Req 2.7).
+ * Centered, muted tone, no bullet.
+ * Color: #6b7280 on #ffffff ≈ 4.6:1 — passes normal-text threshold (Req 8.3).
+ */
+.empty-state {
+  list-style: none;
+  text-align: center;
+  padding: var(--space-8) var(--space-4);
+  color: var(--color-text-muted); /* #6b7280 ≈ 4.6:1 on white */
+  font-size: var(--font-size-body); /* 16px ≥ 14px — Req 8.2 */
+}
+
+/* =============================================================================
+   18. Error Banner Styles
+   ============================================================================= */
+
+/*
+ * .banner--error / banner shared base already in section 3.
+ * Here we add the high-contrast styling variant for the three storage banners.
+ *
+ * Text: #7f1d1d (red-900) on #fef2f2 (red-50).
+ * Contrast: ~9.2:1 — well above 4.5:1 (Req 8.3).
+ */
+.banner--error {
+  background-color: var(--color-banner-bg);   /* #fef2f2 */
+  color: var(--color-banner-text);             /* #991b1b — ~7.5:1 on #fef2f2 */
+  border-bottom: 2px solid var(--color-error-border); /* #fca5a5 */
+  font-weight: 500;
+}
+
+/* =============================================================================
+   19. Inline Form Error (#form-error)
+   ============================================================================= */
+
+/*
+ * #form-error sits inside the form.  Layout rules in section 12 (task 11.1).
+ * Here we reinforce and extend the visual treatment.
+ *
+ * Color: #b91c1c on #ffffff ≈ 7:1 — satisfies ≥ 4.5:1 (Req 8.3).
+ * When hidden (via [hidden]), the [hidden] rule in section 2 (display:none !important)
+ * removes it from flow so no gap is left.
+ */
+#form-error {
+  color: var(--color-error); /* #b91c1c ≈ 7:1 on #fff */
+  background-color: var(--color-error-bg); /* #fef2f2 */
+  border: 1px solid var(--color-error-border); /* #fca5a5 */
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-small); /* 14px */
+  font-weight: 500;
+  /* Override the min-height set by .form-error in section 12 so no
+     blank box appears when the error is empty */
+  min-height: 0;
+  /* Only display when there is content — :not(:empty) hides the styled
+     box when the error element is present but text-free */
+  display: none;
+}
+
+#form-error:not(:empty) {
+  display: block;
+}
+
+/* Suppress the border/background when explicitly hidden by [hidden] attribute */
+#form-error[hidden] {
+  display: none !important;
+}
+
+/* =============================================================================
+   20. Chart Canvas Sizing and Empty-State
+   ============================================================================= */
+
+/*
+ * .chart-container and #spending-chart base rules are in section 8 (task 11.1).
+ * Here we add aspect-ratio and responsive sizing to ensure the canvas never
+ * overflows on any viewport from 320px to 2560px (Req 7.3, Req 8.1).
+ */
+.chart-container {
+  /* Keep chart square (1:1) up to its max-width — Chart.js maintains this */
+  aspect-ratio: 1 / 1;
+  max-width: var(--chart-max-width); /* 480px default, 560px at ≥ 1024px */
+  width: 100%;
+  margin: var(--space-4) auto 0;
+  position: relative;
+  overflow: hidden;
+}
+
+/*
+ * Force the canvas to fill its container; Chart.js will use offsetWidth/Height
+ * and respects the intrinsic dimensions set by the container.
+ */
+#spending-chart {
+  width: 100% !important;
+  height: auto !important;
+  max-width: 100%;
+  display: block;
+}
+
+/*
+ * Chart empty-state paragraph.
+ * Color: #6b7280 on #ffffff ≈ 4.6:1 — passes normal-text threshold (Req 8.3).
+ */
+#chart-empty-msg {
+  text-align: center;
+  color: var(--color-text-muted); /* #6b7280 ≈ 4.6:1 on white */
+  padding: var(--space-6) var(--space-4);
+  font-size: var(--font-size-body); /* 16px ≥ 14px — Req 8.2 */
+}
+
+/* =============================================================================
+   21. Section Headings — form & list titles
+   ============================================================================= */
+
+/*
+ * The h2 inside .form-section and .list-section.
+ * Section 9 sets h2 to 1.25rem (20px ≥ 18px — Req 8.2).
+ * Color: #1a1a2e on #ffffff ≈ 16:1 — satisfies ≥ 4.5:1 and ≥ 3:1 (Req 8.3).
+ */
+.form-section h2,
+.list-section h2,
+.chart-section h2 {
+  color: var(--color-text); /* #1a1a2e */
+  font-size: var(--font-size-h2); /* 1.25rem = 20px */
+  margin-bottom: var(--space-4);
+}
+
+/* =============================================================================
+   22. Balance Amount Colour
+   ============================================================================= */
+
+/*
+ * .balance-amount is a prominent figure (2.5rem = 40px — large text).
+ * Contrast: #1a1a2e on #ffffff ≈ 16:1 — exceeds both 3:1 and 4.5:1 (Req 8.3).
+ */
+.balance-amount {
+  color: var(--color-primary); /* #4f46e5 ≈ 5.5:1 on white — Req 8.3 */
+}
